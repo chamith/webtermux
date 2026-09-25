@@ -89,6 +89,20 @@ systemctl --user daemon-reload
 systemctl --user enable --now webtermux
 ```
 
+## Uninstall
+
+```bash
+./uninstall.sh
+```
+
+Stops and removes the systemd service. It's conservative by default —
+your tmux sessions and `.env` (login secret) are left alone unless you
+confirm removing them at each prompt. Pass `--purge` to skip the prompts
+and remove everything (service, sessions, `.env`, build artifacts)
+non-interactively. It never removes system packages (`tmux`,
+`build-essential`, `python3`) or the project directory itself — see the
+script's own output for how to do that manually if you want to.
+
 ## Development
 
 ```bash
