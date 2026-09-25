@@ -1,4 +1,4 @@
-# Web Terminal
+# Webtermux
 
 A small web app for managing multiple named terminal sessions in your browser —
 like `tmux` + `ttyd`, but with a UI for creating, listing, attaching to,
@@ -67,13 +67,13 @@ survives logout/crashes and starts automatically:
 
 ```bash
 mkdir -p ~/.config/systemd/user
-cp deploy/web-terminal.service ~/.config/systemd/user/
+cp deploy/webtermux.service ~/.config/systemd/user/
 systemctl --user daemon-reload
-systemctl --user enable --now web-terminal
+systemctl --user enable --now webtermux
 ```
 
-Check it's up: `systemctl --user status web-terminal`, logs via
-`journalctl --user -u web-terminal -f`.
+Check it's up: `systemctl --user status webtermux`, logs via
+`journalctl --user -u webtermux -f`.
 
 To also have it start on boot without needing to log in first:
 

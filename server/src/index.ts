@@ -139,5 +139,5 @@ server.on("upgrade", (req, socket, head) => {
 sessionWatcher.start();
 
 server.listen(config.port, () => {
-  console.log(`web-terminal server listening on :${config.port}`);
+  console.log(`webtermux server listening on :${config.port}`);
 });

@@ -1,11 +1,11 @@
 [Unit]
-Description=Web Terminal Manager
+Description=Webtermux Manager
 After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/Workspace/web-terminal/server
-EnvironmentFile=%h/Workspace/web-terminal/.env
+WorkingDirectory=%h/Workspace/webtermux/server
+EnvironmentFile=%h/Workspace/webtermux/.env
 ExecStart=/home/chamith/.nvm/versions/node/v24.16.0/bin/node dist/index.js
 Restart=on-failure
 RestartSec=2

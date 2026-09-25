@@ -8,3 +8,12 @@ body,
   height: 100%;
   overflow: hidden;
 }
+
+/* Force xterm.js internal elements to fill the container properly */
+.xterm {
+  height: 100%;
+}
+
+.xterm-viewport {
+  overflow-y: hidden !important;
+}

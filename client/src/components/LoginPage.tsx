@@ -26,7 +26,7 @@ export default function LoginPage({ onLoggedIn }: { onLoggedIn: () => void }) {
         onSubmit={submit}
         className="flex w-72 flex-col gap-3 rounded-lg border border-neutral-800 bg-neutral-900 p-6"
       >
-        <h1 className="text-lg font-semibold text-neutral-100">Web Terminal</h1>
+        <h1 className="text-lg font-semibold text-neutral-100">Webtermux</h1>
         <input
           autoFocus
           type="password"

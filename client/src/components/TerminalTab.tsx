@@ -31,7 +31,8 @@ export default function TerminalTab({ sessionName, active }: Props) {
     term.loadAddon(fitAddon);
     term.loadAddon(new WebLinksAddon());
     term.open(container);
-    fitAddon.fit();
+    // Defer initial fit so the DOM has been fully painted
+    requestAnimationFrame(() => fitAddon.fit());
     if (active) term.focus();
 
     let ws: WebSocket;
@@ -89,15 +90,19 @@ export default function TerminalTab({ sessionName, active }: Props) {
 
   useEffect(() => {
     if (active) {
-      fitAddonRef.current?.fit();
-      termRef.current?.focus();
+      // Defer fit so the tab is visible before measuring
+      requestAnimationFrame(() => {
+        fitAddonRef.current?.fit();
+        termRef.current?.focus();
+      });
     }
   }, [active]);
 
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden p-2 ${active ? "block" : "hidden"}`}
+      className={`absolute inset-0 overflow-hidden p-2 ${active ? "flex" : "hidden"}`}
+      style={{ flexDirection: "column" }}
     />
   );
 }
