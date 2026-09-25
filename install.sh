@@ -77,6 +77,21 @@ sed \
   -e "s#__NODE_BIN__#${NODE_BIN}#g" \
   deploy/webtermux.service.template > "$HOME/.config/systemd/user/webtermux.service"
 
+# When running over SSH or in a non-login session, $XDG_RUNTIME_DIR and
+# $DBUS_SESSION_BUS_ADDRESS may not be set, causing "systemctl --user" to
+# fail with "Failed to connect to user scope bus". Setting XDG_RUNTIME_DIR
+# to the standard path (/run/user/<uid>) is sufficient for systemd to locate
+# the user manager socket without a full D-Bus session.
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+if [[ ! -d "$XDG_RUNTIME_DIR" ]]; then
+  # The runtime dir is normally created by systemd-logind on first login.
+  # On headless servers where the user has never had an interactive session
+  # it may not exist yet — create it with the required permissions.
+  sudo mkdir -p "$XDG_RUNTIME_DIR"
+  sudo chown "$(id -u):$(id -g)" "$XDG_RUNTIME_DIR"
+  sudo chmod 700 "$XDG_RUNTIME_DIR"
+fi
+
 systemctl --user daemon-reload
 systemctl --user enable --now webtermux
 
