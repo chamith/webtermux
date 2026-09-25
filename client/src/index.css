@@ -11,7 +11,12 @@ body,
 
 /* Force xterm.js internal elements to fill the container properly */
 .xterm {
+  width: 100%;
   height: 100%;
+}
+
+.xterm-screen {
+  width: 100% !important;
 }
 
 .xterm-viewport {
