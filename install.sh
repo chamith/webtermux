@@ -103,6 +103,10 @@ if systemctl --user is-active --quiet webtermux; then
   echo "Manage it with: systemctl --user {status|stop|restart} webtermux"
   echo "Logs: journalctl --user -u webtermux -f"
   echo
+  echo "NOTE: If 'systemctl --user' fails in a new SSH session with a D-Bus error,"
+  echo "run this first (or add it to ~/.bashrc on this host):"
+  echo "  export XDG_RUNTIME_DIR=/run/user/\$(id -u)"
+  echo
   echo "To start on boot without an active login session: loginctl enable-linger \$USER"
   echo "For remote access from other devices, see the Tailscale section in README.md."
 else
