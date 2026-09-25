@@ -7,7 +7,7 @@ import { useSessionsSocket } from "./hooks/useSessionsSocket";
 
 const SIDEBAR_MIN = 160;
 const SIDEBAR_MAX = 600;
-const SIDEBAR_DEFAULT = 256; // w-64 = 16rem = 256px
+const SIDEBAR_DEFAULT = 170;
 
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
@@ -145,7 +145,7 @@ export default function App() {
             ))}
           </div>
         )}
-        <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div className="relative min-h-0 flex-1 overflow-hidden" style={{ backgroundColor: "#2b2b2b" }}>
           {openNames.length === 0 && (
             <div className="flex h-full items-center justify-center text-neutral-600">
               Select or create a session to get started.

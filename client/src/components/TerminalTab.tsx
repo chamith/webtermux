@@ -21,9 +21,10 @@ export default function TerminalTab({ sessionName, active }: Props) {
 
     const term = new Terminal({
       cursorBlink: true,
-      fontSize: 14,
-      fontFamily: "Menlo, Consolas, 'Liberation Mono', monospace",
-      theme: { background: "#0a0a0a" },
+      fontSize: 12,
+      fontFamily: "monospace",
+      lineHeight: 1.125,
+      theme: { background: "#2b2b2b", foreground: "#d0d0d0" },
     });
     const fitAddon = new FitAddon();
     fitAddonRef.current = fitAddon;
@@ -112,7 +113,7 @@ export default function TerminalTab({ sessionName, active }: Props) {
     <div
       ref={containerRef}
       className={`absolute inset-0 overflow-hidden p-2 ${active ? "flex" : "hidden"}`}
-      style={{ flexDirection: "column" }}
+      style={{ backgroundColor: "#2b2b2b", flexDirection: "column" }}
     />
   );
 }
