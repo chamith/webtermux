@@ -22,58 +22,29 @@ with your real files/tools/environment, even if the web app restarts.
   tmux sessions are real host sessions with your actual environment — not
   sandboxed inside a container's filesystem.
 
-## Setup
+## Install (new server)
 
-Requires `tmux` on the host:
-
-```bash
-sudo apt install -y tmux
-```
-
-Generate a login password hash and a session secret:
+Requires Node.js 18+ already on the host (e.g. via
+[nvm](https://github.com/nvm-sh/nvm)) and a Debian/Ubuntu host (`apt`). Clone
+the repo onto the server, then:
 
 ```bash
-cd server && npm install
-npm run hash-password -- 'your-password-here'
-openssl rand -hex 32
+./install.sh
 ```
 
-Create `.env` in the project root (see [.env.example](.env.example)):
+This installs `tmux` and native-build tooling (prompts for `sudo`), builds
+the server and client, walks you through setting a login password (writing
+`.env`), and installs + starts a systemd **user** service (`webtermux`) so it
+survives logout and crashes and starts on boot. Safe to re-run — it skips
+`.env` generation if one already exists.
 
-```
-ADMIN_PASSWORD_HASH=<bcrypt hash from above>
-SESSION_SECRET=<random hex from above>
-```
-
-Build both apps:
+When it finishes, open `http://<server>:3000`. Manage the service with:
 
 ```bash
-(cd server && npm install && npm run build)
-(cd client && npm install && npm run build)
+systemctl --user status webtermux
+systemctl --user restart webtermux
+journalctl --user -u webtermux -f
 ```
-
-## Running it
-
-**Quick start** (foreground, for trying it out):
-
-```bash
-cd server && npm start
-```
-
-Open `http://localhost:3000`.
-
-**Persistent (recommended)** — run it as a systemd user service so it
-survives logout/crashes and starts automatically:
-
-```bash
-mkdir -p ~/.config/systemd/user
-cp deploy/webtermux.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now webtermux
-```
-
-Check it's up: `systemctl --user status webtermux`, logs via
-`journalctl --user -u webtermux -f`.
 
 To also have it start on boot without needing to log in first:
 
@@ -84,7 +55,39 @@ loginctl enable-linger $USER
 **Persistence note:** tmux is its own daemon process, independent of the
 Node server — restarting/crashing the web app (or `systemctl restart`) never
 touches your tmux sessions. Only a full host reboot ends them, same as any
-tmux session would.
+tmux session would. (The service's `KillMode=process` is what makes this
+work — see [deploy/webtermux.service.template](deploy/webtermux.service.template).)
+
+### Manual setup
+
+If you're not on apt, or want more control than `install.sh` gives you:
+
+```bash
+sudo apt install -y tmux build-essential python3   # or your distro's equivalent
+(cd server && npm install && npm run build)
+(cd client && npm install && npm run build)
+
+cd server && npm run hash-password -- 'your-password-here'   # -> bcrypt hash
+openssl rand -hex 32                                          # -> session secret
+```
+
+Create `.env` in the project root (see [.env.example](.env.example)) with
+those two values, then run it in the foreground to try it out:
+
+```bash
+cd server && npm start   # http://localhost:3000
+```
+
+Or install it as a systemd user service yourself, filling in the template's
+placeholders (`install.sh` does exactly this):
+
+```bash
+mkdir -p ~/.config/systemd/user
+sed -e "s#__PROJECT_DIR__#$(pwd)#g" -e "s#__NODE_BIN__#$(command -v node)#g" \
+  deploy/webtermux.service.template > ~/.config/systemd/user/webtermux.service
+systemctl --user daemon-reload
+systemctl --user enable --now webtermux
+```
 
 ## Development
 
