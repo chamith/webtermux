@@ -37,9 +37,9 @@ export const api = {
     request<{ ok: true }>(`/api/sessions/${encodeURIComponent(name)}`, { method: "DELETE" }),
 };
 
-export function terminalSocketUrl(name: string): string {
+export function terminalSocketUrl(name: string, cols: number, rows: number): string {
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${window.location.host}/ws/terminal/${encodeURIComponent(name)}`;
+  return `${proto}//${window.location.host}/ws/terminal/${encodeURIComponent(name)}?cols=${cols}&rows=${rows}`;
 }
 
 export function sessionsSocketUrl(): string {

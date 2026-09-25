@@ -1,12 +1,12 @@
 [Unit]
-Description=Web Terminal Manager
+Description=Webtermux Manager
 After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=%h/Workspace/web-terminal/server
-EnvironmentFile=%h/Workspace/web-terminal/.env
-ExecStart=/home/chamith/.nvm/versions/node/v24.16.0/bin/node dist/index.js
+WorkingDirectory=__PROJECT_DIR__/server
+EnvironmentFile=__PROJECT_DIR__/.env
+ExecStart=__NODE_BIN__ dist/index.js
 Restart=on-failure
 RestartSec=2
 # The tmux server is spawned as a descendant of this process and must survive

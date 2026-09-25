@@ -9,7 +9,7 @@ interface ClientMessage {
   rows?: number;
 }
 
-export async function attachTerminal(ws: WebSocket, sessionName: string): Promise<void> {
+export async function attachTerminal(ws: WebSocket, sessionName: string, cols = 80, rows = 24): Promise<void> {
   if (!(await hasSession(sessionName))) {
     ws.send(JSON.stringify({ type: "error", message: `Session "${sessionName}" does not exist.` }));
     ws.close();
@@ -21,8 +21,8 @@ export async function attachTerminal(ws: WebSocket, sessionName: string): Promis
     ["-L", config.tmuxSocketName, "attach-session", "-t", sessionName],
     {
       name: "xterm-256color",
-      cols: 80,
-      rows: 24,
+      cols,
+      rows,
       env: process.env as Record<string, string>,
     },
   );
