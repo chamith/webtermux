@@ -1,15 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import LoginPage from "./components/LoginPage";
 import SessionSidebar from "./components/SessionSidebar";
 import TerminalTab from "./components/TerminalTab";
 import { api } from "./api";
 import { useSessionsSocket } from "./hooks/useSessionsSocket";
 
+const SIDEBAR_MIN = 160;
+const SIDEBAR_MAX = 600;
+const SIDEBAR_DEFAULT = 256; // w-64 = 16rem = 256px
+
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [openNames, setOpenNames] = useState<string[]>([]);
   const [activeName, setActiveName] = useState<string | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT);
+  const dragging = useRef(false);
 
   const sessions = useSessionsSocket(authenticated);
 
@@ -27,6 +33,23 @@ export default function App() {
     setOpenNames((prev) => prev.filter((n) => names.has(n)));
     setActiveName((prev) => (prev && names.has(prev) ? prev : null));
   }, [sessions, authenticated]);
+
+  const onDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    dragging.current = true;
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragging.current) return;
+      setSidebarWidth(Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, ev.clientX)));
+    };
+    const onUp = () => {
+      dragging.current = false;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, []);
 
   if (!authChecked) return null;
   if (!authenticated) {
@@ -79,6 +102,7 @@ export default function App() {
   return (
     <div className="flex h-full w-full">
       <SessionSidebar
+        width={sidebarWidth}
         sessions={sessions}
         openNames={openNames}
         activeName={activeName}
@@ -87,6 +111,12 @@ export default function App() {
         onRename={handleRename}
         onKill={handleKill}
         onLogout={handleLogout}
+      />
+      {/* Drag handle */}
+      <div
+        onMouseDown={onDragStart}
+        className="group relative z-10 w-1 flex-none cursor-col-resize bg-neutral-800 hover:bg-emerald-600 active:bg-emerald-500"
+        title="Drag to resize"
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {openNames.length > 0 && (

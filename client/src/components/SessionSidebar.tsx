@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { TmuxSession } from "../api";
 
 interface Props {
+  width: number;
   sessions: TmuxSession[];
   openNames: string[];
   activeName: string | null;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function SessionSidebar({
+  width,
   sessions,
   openNames,
   activeName,
@@ -46,7 +48,10 @@ export default function SessionSidebar({
   };
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-neutral-800 bg-neutral-900">
+    <div
+      className="flex h-full flex-col bg-neutral-900"
+      style={{ width, minWidth: width, maxWidth: width }}
+    >
       <div className="flex items-center justify-between border-b border-neutral-800 px-3 py-2">
         <span className="text-sm font-semibold text-neutral-300">Sessions</span>
         <button
