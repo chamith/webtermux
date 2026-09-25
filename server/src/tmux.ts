@@ -89,7 +89,7 @@ export async function createSession(name: string): Promise<void> {
   if (await hasSession(name)) {
     throw new SessionExistsError(`Session "${name}" already exists.`);
   }
-  await runTmux(["new-session", "-d", "-s", name]);
+  await runTmux(["new-session", "-d", "-s", name, "-c", process.env.HOME ?? "/"]);
 }
 
 export async function renameSession(oldName: string, newName: string): Promise<void> {

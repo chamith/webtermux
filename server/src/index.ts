@@ -107,13 +107,16 @@ sessionsWss.on("connection", (ws) => sessionWatcher.addClient(ws));
 
 const terminalWss = new WebSocketServer({ noServer: true });
 terminalWss.on("connection", (ws, req) => {
-  const match = req.url?.match(/^\/ws\/terminal\/([^/?]+)/);
+  const url = new URL(req.url ?? "", "http://localhost");
+  const match = url.pathname.match(/^\/ws\/terminal\/([^/?]+)/);
   const name = match ? decodeURIComponent(match[1]) : null;
   if (!name) {
     ws.close();
     return;
   }
-  attachTerminal(ws, name).catch((err) => {
+  const cols = Math.max(1, Number(url.searchParams.get("cols")) || 80);
+  const rows = Math.max(1, Number(url.searchParams.get("rows")) || 24);
+  attachTerminal(ws, name, cols, rows).catch((err) => {
     console.error("attachTerminal failed:", err);
     ws.close();
   });
