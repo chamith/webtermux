@@ -22,13 +22,25 @@ export interface View {
   focusedPane: number;       // index of the currently focused pane (0-based)
 }
 
+function randomId(): string {
+  // crypto.randomUUID() requires a secure context (HTTPS/localhost).
+  // Fall back to a manual implementation for plain HTTP origins.
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
 // Create a new View with the given layout, all pane slots empty.
 export function makeView(layout: LayoutMode = "single", firstSession?: string): View {
   const count = LAYOUT_PANE_COUNT[layout];
   const panes: (string | null)[] = Array(count).fill(null);
   if (firstSession !== undefined) panes[0] = firstSession;
   return {
-    id: crypto.randomUUID(),
+    id: randomId(),
     layout,
     panes,
     focusedPane: 0,
