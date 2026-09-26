@@ -130,6 +130,10 @@ export default function App() {
       .checkSession()
       .then((r) => setAuthenticated(r.authenticated))
       .finally(() => setAuthChecked(true));
+
+    api.info().then(({ hostname }) => {
+      document.title = `${hostname} - webtermux`;
+    }).catch(() => {/* leave default title */});
   }, []);
 
   // Null out pane slots for sessions that have disappeared externally.

@@ -1,4 +1,5 @@
 import http from "node:http";
+import os from "node:os";
 import path from "node:path";
 import express from "express";
 import { WebSocketServer } from "ws";
@@ -19,6 +20,10 @@ import { attachTerminal } from "./ptyBridge";
 
 const app = express();
 app.use(express.json());
+
+app.get("/api/info", (_req, res) => {
+  res.json({ hostname: os.hostname() });
+});
 
 app.post("/api/login", async (req, res) => {
   const { password } = req.body ?? {};

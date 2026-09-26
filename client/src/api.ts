@@ -19,6 +19,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   checkSession: () => request<{ authenticated: boolean }>("/api/session-check"),
+  info: () => request<{ hostname: string }>("/api/info"),
   login: (password: string) =>
     request<{ ok: true }>("/api/login", { method: "POST", body: JSON.stringify({ password }) }),
   logout: () => request<{ ok: true }>("/api/logout", { method: "POST" }),
