@@ -1,1 +1,1 @@
-{"root":["./src/App.tsx","./src/api.ts","./src/main.tsx","./src/components/LoginPage.tsx","./src/components/SessionSidebar.tsx","./src/components/TerminalTab.tsx","./src/hooks/useSessionsSocket.ts"],"version":"5.9.3"}
+{"root":["./src/App.tsx","./src/api.ts","./src/main.tsx","./src/components/LoginPage.tsx","./src/components/SessionSidebar.tsx","./src/components/TerminalPane.tsx","./src/components/TerminalTab.tsx","./src/hooks/useSessionsSocket.ts","./src/types/layout.ts"],"version":"5.9.3"}
