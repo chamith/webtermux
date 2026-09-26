@@ -15,10 +15,11 @@ body,
   height: 100%;
 }
 
-.xterm-screen {
-  width: 100% !important;
+.xterm-viewport {
+  overflow-y: scroll !important;
 }
 
-.xterm-viewport {
-  overflow-y: hidden !important;
+.xterm-screen {
+  width: 100% !important;
+  overflow: hidden;
 }

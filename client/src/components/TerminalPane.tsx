@@ -22,6 +22,7 @@ export default function TerminalPane({ sessionName, focused, onFocus }: Props) {
 
     const term = new Terminal({
       cursorBlink: true,
+      scrollback: 5000,
       fontSize: 12,
       fontFamily: "monospace",
       lineHeight: 1.125,
@@ -33,6 +34,20 @@ export default function TerminalPane({ sessionName, focused, onFocus }: Props) {
     term.loadAddon(fitAddon);
     term.loadAddon(new WebLinksAddon());
     term.open(container);
+
+    // Always intercept wheel events — when at the bottom xterm.js converts
+    // wheel to cursor key sequences (^[[A/^[[B) which get echoed as junk.
+    // tmux uses the alternate screen so xterm.js has no scrollback.
+    // Send a 'scroll' message to the server which runs tmux scroll commands.
+    term.attachCustomWheelEventHandler((e) => {
+      if (ws?.readyState === WebSocket.OPEN) {
+        const lines = e.deltaY > 0
+          ? Math.max(1, Math.round(e.deltaY / 40))
+          : Math.min(-1, Math.round(e.deltaY / 40));
+        ws.send(JSON.stringify({ type: "scroll", lines }));
+      }
+      return false;
+    });
     // Fit before opening the WebSocket so the pty is spawned at the correct size.
     fitAddon.fit();
     if (focused) term.focus();
@@ -115,8 +130,8 @@ export default function TerminalPane({ sessionName, focused, onFocus }: Props) {
       )}
       <div
         ref={containerRef}
-        className="absolute inset-0 overflow-hidden p-1"
-        style={{ backgroundColor: "#2b2b2b", flexDirection: "column" }}
+        className="absolute inset-0 p-1"
+        style={{ backgroundColor: "#2b2b2b" }}
       />
     </div>
   );
