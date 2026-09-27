@@ -1,0 +1,19 @@
+[Unit]
+Description=Webtermux Manager
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=__PROJECT_DIR__/server
+EnvironmentFile=__PROJECT_DIR__/.env
+ExecStart=__NODE_BIN__ dist/index.js
+Restart=on-failure
+RestartSec=2
+# The tmux server is spawned as a descendant of this process and must survive
+# service restarts/stops. KillMode=control-group (the default) would send the
+# stop signal to every process in the service's cgroup, killing tmux and every
+# session along with it. KillMode=process limits that to the main PID only.
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
