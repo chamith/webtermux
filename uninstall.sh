@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Removes what install.sh set up: the systemd user service, and (optionally,
-# with confirmation) build artifacts, .env, and your tmux sessions.
+# with confirmation) lingering, build artifacts, .env, and your tmux sessions.
 #
 # By default this is conservative: it stops/removes the service but leaves
 # your tmux sessions (real shells, possibly with unsaved work) and .env
@@ -46,6 +46,20 @@ if [[ -f "$UNIT_PATH" ]]; then
   log "Removed $UNIT_PATH"
 else
   log "No systemd service installed, nothing to stop"
+fi
+
+# --- lingering ---------------------------------------------------------------
+# install.sh enables lingering so the user service runs while logged out. It's
+# an account-wide setting that other user services may rely on, so it's only
+# reverted when asked, never by --purge.
+RUN_USER="$(id -un)"
+if ! $PURGE && [[ "$(loginctl show-user "$RUN_USER" -p Linger --value 2>/dev/null)" == "yes" ]]; then
+  if confirm "Disable lingering for $RUN_USER? (Say no if other user services need to keep running while you're logged out.)"; then
+    sudo loginctl disable-linger "$RUN_USER"
+    log "Lingering disabled"
+  else
+    log "Leaving lingering enabled"
+  fi
 fi
 
 # --- tmux sessions ------------------------------------------------------------

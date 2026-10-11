@@ -8,7 +8,9 @@
 #
 # Supports running as root (e.g. on servers with only a root account) or as a
 # regular user with sudo. When run as root a system-wide service is installed
-# under /etc/systemd/system/; otherwise a systemd user service is used.
+# under /etc/systemd/system/; otherwise a systemd user service is used, with
+# lingering enabled so it keeps running (and starts at boot) while the user is
+# logged out. Either way the service doesn't depend on anyone being logged in.
 
 set -euo pipefail
 
@@ -16,6 +18,7 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
 log() { printf '\n\033[1;32m==>\033[0m %s\n' "$1"; }
+warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$1" >&2; }
 die() { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 
 [[ "$(uname -s)" == "Linux" ]] || die "This installer targets Linux (Debian/Ubuntu). See README.md for manual setup on other platforms."
@@ -25,6 +28,7 @@ command -v apt-get >/dev/null 2>&1 || die "This installer requires apt (Debian/U
 # When running as root, "sudo" is a no-op wrapper; otherwise we use real sudo.
 AS_ROOT=false
 SUDO=""
+RUN_USER="$(id -un)"
 if [[ "$(id -u)" -eq 0 ]]; then
   AS_ROOT=true
 else
@@ -124,6 +128,7 @@ if [[ "$AS_ROOT" == true ]]; then
     log "Webtermux is running: http://localhost:${PORT}"
     echo "Manage it with: systemctl {status|stop|restart} webtermux"
     echo "Logs: journalctl -u webtermux -f"
+    echo "Runs as a system service: starts at boot and keeps running with nobody logged in."
   else
     die "Service failed to start. Check: journalctl -u webtermux -e"
   fi
@@ -137,12 +142,34 @@ else
     -e "s#__NODE_BIN__#${NODE_BIN}#g" \
     deploy/webtermux.service.template > "$HOME/.config/systemd/user/webtermux.service"
 
+  # Lingering tells systemd to start this user's service manager at boot and
+  # keep it running after the last session ends, so the service stays up while
+  # nobody is logged in. Without it a user service stops on logout and doesn't
+  # start at boot. Do this before any `systemctl --user` call: it also starts
+  # the user manager (and creates /run/user/<uid>) on headless hosts where
+  # nobody has logged in yet.
+  LINGER_OK=false
+  log "Enabling lingering so the service runs while you're logged out — may prompt for your sudo password"
+  if $SUDO loginctl enable-linger "$RUN_USER"; then
+    LINGER_OK=true
+  else
+    warn "Could not enable lingering for $RUN_USER. The service will stop when you log out and won't start at boot until you run: sudo loginctl enable-linger $RUN_USER"
+  fi
+
   # When running over SSH or in a non-login session, $XDG_RUNTIME_DIR and
   # $DBUS_SESSION_BUS_ADDRESS may not be set, causing "systemctl --user" to
   # fail with "Failed to connect to user scope bus". Setting XDG_RUNTIME_DIR
   # to the standard path (/run/user/<uid>) is sufficient for systemd to locate
   # the user manager socket without a full D-Bus session.
   export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+  # The user manager starts asynchronously after enable-linger; give it a few
+  # seconds to come up before talking to it.
+  for _ in $(seq 1 20); do
+    systemctl --user show-environment >/dev/null 2>&1 && break
+    sleep 0.5
+  done
+
   if [[ ! -d "$XDG_RUNTIME_DIR" ]]; then
     # The runtime dir is normally created by systemd-logind on first login.
     # On headless servers where the user has never had an interactive session
@@ -167,7 +194,12 @@ else
     echo "run this first (or add it to ~/.bashrc on this host):"
     echo "  export XDG_RUNTIME_DIR=/run/user/\$(id -u)"
     echo
-    echo "To start on boot without an active login session: loginctl enable-linger \$USER"
+    if [[ "$LINGER_OK" == true ]]; then
+      echo "Lingering is enabled: the service starts at boot and keeps running while you're logged out."
+    else
+      echo "WARNING: lingering is NOT enabled, so the service stops when you log out. Fix with:"
+      echo "  sudo loginctl enable-linger $RUN_USER"
+    fi
     echo "For remote access from other devices, see the Tailscale section in README.md."
   else
     die "Service failed to start. Check: journalctl --user -u webtermux -e"

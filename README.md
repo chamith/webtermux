@@ -34,9 +34,14 @@ the repo onto the server, then:
 
 This installs `tmux` and native-build tooling (prompts for `sudo`), builds
 the server and client, walks you through setting a login password (writing
-`.env`), and installs + starts a systemd **user** service (`webtermux`) so it
-survives logout and crashes and starts on boot. Safe to re-run — it skips
-`.env` generation if one already exists.
+`.env`), and installs + starts a systemd service (`webtermux`). It keeps
+running after you log out, restarts on crashes, and starts on boot, with nobody
+logged in. Safe to re-run — it skips `.env` generation if one already exists.
+
+Run as a regular user, it installs a systemd **user** service and enables
+*lingering* for your account (`sudo loginctl enable-linger`, which is what lets a
+user service run while you're logged out). Run as root, it installs a
+system-wide service instead.
 
 When it finishes, open `http://<server>:3000`. Manage the service with:
 
@@ -46,11 +51,8 @@ systemctl --user restart webtermux
 journalctl --user -u webtermux -f
 ```
 
-To also have it start on boot without needing to log in first:
-
-```bash
-loginctl enable-linger $USER
-```
+(Those are the user-service commands; a root install uses plain `systemctl` and
+`journalctl -u webtermux`.)
 
 **Persistence note:** tmux is its own daemon process, independent of the
 Node server — restarting/crashing the web app (or `systemctl restart`) never
@@ -87,6 +89,9 @@ sed -e "s#__PROJECT_DIR__#$(pwd)#g" -e "s#__NODE_BIN__#$(command -v node)#g" \
   deploy/webtermux.service.template > ~/.config/systemd/user/webtermux.service
 systemctl --user daemon-reload
 systemctl --user enable --now webtermux
+
+# Keep it running while you're logged out, and start it at boot:
+sudo loginctl enable-linger "$USER"
 ```
 
 ## Uninstall
