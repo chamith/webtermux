@@ -118,6 +118,7 @@ function ViewArea({ view, visible, onFocusPane, onNeedSession }: ViewAreaProps) 
 export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [unreachable, setUnreachable] = useState(false);
   const [views, setViews] = useState<View[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT);
@@ -125,16 +126,23 @@ export default function App() {
 
   const sessions = useSessionsSocket(authenticated);
 
-  useEffect(() => {
+  const checkAuth = useCallback(() => {
+    setUnreachable(false);
     api
       .checkSession()
       .then((r) => setAuthenticated(r.authenticated))
+      // The installed app shell loads from cache even when the server is down.
+      .catch(() => setUnreachable(true))
       .finally(() => setAuthChecked(true));
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
 
     api.info().then(({ hostname }) => {
       document.title = `${hostname} - webtermux`;
     }).catch(() => {/* leave default title */});
-  }, []);
+  }, [checkAuth]);
 
   // Null out pane slots for sessions that have disappeared externally.
   useEffect(() => {
@@ -165,6 +173,19 @@ export default function App() {
   }, []);
 
   if (!authChecked) return null;
+  if (unreachable) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-neutral-950 text-sm text-neutral-400">
+        <p>Can't reach the Webtermux server.</p>
+        <button
+          onClick={checkAuth}
+          className="rounded bg-emerald-700 px-3 py-1.5 font-medium text-white hover:bg-emerald-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
   if (!authenticated) {
     return <LoginPage onLoggedIn={() => setAuthenticated(true)} />;
   }

@@ -131,6 +131,29 @@ If you'd rather expose it publicly with a real domain/TLS instead, put a
 reverse proxy (e.g. Caddy) in front of port 3000 — the app works fine behind
 one as-is.
 
+## Install as an app (PWA)
+
+Webtermux is an installable Progressive Web App: installed, it opens in its
+own window (no browser tabs or address bar) with its own icon in your
+launcher / home screen.
+
+- **Desktop Chrome / Edge:** click the install icon in the address bar.
+- **Android Chrome:** menu → *Add to Home screen* / *Install app*.
+- **iOS / iPadOS Safari:** Share → *Add to Home Screen*.
+
+Browsers only offer installation (and only run the service worker) on a
+**secure origin** — `https://…` or `http://localhost`. Plain
+`http://<server>:3000` keeps working as a normal web page but isn't
+installable. To get HTTPS, either put a TLS reverse proxy in front (see
+above), or on a tailnet with HTTPS certificates enabled run
+`tailscale serve --bg 3000` and use the `https://<machine>.<tailnet>.ts.net`
+URL it prints.
+
+The service worker caches only the app shell (HTML/JS/CSS/icons), so the app
+opens instantly and shows a "can't reach the server" screen with a retry
+button when the host is down. API calls and terminal websockets are never
+cached. It is only registered in production builds, not under `npm run dev`.
+
 ## Notes / limitations (v1)
 
 - Single user, single shared password (no per-user accounts).
